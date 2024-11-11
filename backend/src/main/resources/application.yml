@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/teamgram
+          jwk-set-uri: http://localhost:8180/realms/teamgram/protocol/openid-connect/certs
+
+teamgram:
+  api:
+    url: http://localhost:8080/api
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.teamgram.admin: DEBUG
+
+cors:
+  allowed-origins: http://localhost:3000
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: Authorization,Content-Type
+  exposed-headers: Authorization
+  allow-credentials: true
+  max-age: 3600
