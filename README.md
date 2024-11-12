@@ -9,7 +9,9 @@
 - Docker и Docker Compose
 - Nginx
 - Certbot для SSL сертификатов
-- Домен, настроенный на сервер (admin.salmin.in)
+- Домены, настроенные на сервер:
+  - admin.salmin.in (админ-панель)
+  - auth.salmin.in (Keycloak)
 
 ### Шаги по установке
 
@@ -21,11 +23,13 @@ git clone https://github.com/Salmin/teamgram-admin.git
 2. Настройте SSL сертификаты:
 ```bash
 sudo certbot certonly --nginx -d admin.salmin.in
+sudo certbot certonly --nginx -d auth.salmin.in
 ```
 
-3. Скопируйте конфигурацию nginx:
+3. Скопируйте конфигурации nginx:
 ```bash
 sudo cp teamgram-admin/nginx/admin.salmin.in.conf /etc/nginx/conf.d/
+sudo cp teamgram-admin/nginx/auth.salmin.in.conf /etc/nginx/conf.d/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -36,17 +40,29 @@ docker network create keycloak_network
 docker network create teamgram-network
 ```
 
-5. Запустите Keycloak (если еще не запущен):
+5. Запустите Keycloak:
 ```bash
 cd keycloak
 docker-compose up -d
 ```
 
 6. Настройте Keycloak:
+- Откройте https://auth.salmin.in
+- Войдите в консоль администратора (логин и пароль из переменных окружения)
 - Создайте realm `teamgram`
-- Создайте клиент `teamgram-admin`
-- Настройте роли `ADMIN_VIEW` и `ADMIN_DELETE`
-- Настройте Google Workspace как Identity Provider
+- Создайте клиент `teamgram-admin`:
+  - Client Protocol: OpenID Connect
+  - Access Type: public
+  - Valid Redirect URIs: https://admin.salmin.in/*
+  - Web Origins: https://admin.salmin.in
+- Создайте роли:
+  - `ADMIN_VIEW` - для просмотра пользователей
+  - `ADMIN_DELETE` - для удаления пользователей
+- Настройте Google Workspace как Identity Provider:
+  - Realm Settings -> Identity Providers -> Add provider -> Google
+  - Настройте Client ID и Secret из Google Cloud Console
+  - Mapper: email -> email
+  - Mapper: name -> name
 
 7. Запустите teamgram-admin:
 ```bash
@@ -57,8 +73,9 @@ docker-compose up -d
 ### Проверка работоспособности
 
 1. Откройте https://admin.salmin.in в браузере
-2. Войдите через Google Workspace аккаунт
-3. Убедитесь, что отображается список пользователей
+2. Вы будете перенаправлены на https://auth.salmin.in для аутентификации
+3. Войдите через Google Workspace аккаунт
+4. После успешной аутентификации вы увидите список пользователей
 
 ### Структура проекта
 
@@ -66,9 +83,17 @@ docker-compose up -d
 teamgram-admin/
 ├── backend/         # Spring Boot backend
 ├── frontend/        # React frontend
-├── nginx/          # Nginx конфигурация
+├── nginx/          # Nginx конфигурации
+│   ├── admin.salmin.in.conf
+│   └── auth.salmin.in.conf
 └── docker-compose.yml
 ```
+
+### URL-адреса
+
+- Админ-панель: https://admin.salmin.in
+- Keycloak: https://auth.salmin.in
+- Backend API: https://admin.salmin.in/api
 
 ### Порты
 
@@ -115,7 +140,7 @@ docker-compose ps
 
 2. Проверка доступности Keycloak:
 ```bash
-curl -I https://salmin.in/auth
+curl -I https://auth.salmin.in
 ```
 
 3. Проверка nginx конфигурации:
@@ -126,3 +151,9 @@ sudo nginx -t
 4. Проверка SSL сертификатов:
 ```bash
 sudo certbot certificates
+```
+
+5. Проверка логов nginx:
+```bash
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log

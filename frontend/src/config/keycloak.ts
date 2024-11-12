@@ -1,7 +1,7 @@
 import Keycloak from 'keycloak-js';
 
 const keycloakConfig = {
-    url: 'http://localhost:8180',
+    url: 'https://auth.salmin.in',
     realm: 'teamgram',
     clientId: 'teamgram-admin'
 };
