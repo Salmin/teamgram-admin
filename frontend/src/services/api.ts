@@ -2,7 +2,7 @@ import axios from 'axios';
 import { User } from '../types/user';
 import keycloak from '../config/keycloak';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://salmin.in/admin/api';
 
 const api = axios.create({
     baseURL: API_URL,

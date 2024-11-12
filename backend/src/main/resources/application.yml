@@ -1,13 +1,15 @@
 server:
-  port: 8080
+  port: 8081
+  servlet:
+    context-path: /
 
 spring:
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://auth.salmin.in/realms/teamgram
-          jwk-set-uri: https://auth.salmin.in/realms/teamgram/protocol/openid-connect/certs
+          issuer-uri: https://salmin.in/auth/realms/teamgram
+          jwk-set-uri: https://salmin.in/auth/realms/teamgram/protocol/openid-connect/certs
 
 teamgram:
   api:
@@ -19,7 +21,7 @@ logging:
     com.teamgram.admin: DEBUG
 
 cors:
-  allowed-origins: https://admin.salmin.in
+  allowed-origins: https://salmin.in
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
   allowed-headers: Authorization,Content-Type
   exposed-headers: Authorization

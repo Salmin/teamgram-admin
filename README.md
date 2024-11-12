@@ -9,9 +9,7 @@
 - Docker и Docker Compose
 - Nginx
 - Certbot для SSL сертификатов
-- Домены, настроенные на сервер:
-  - admin.salmin.in (админ-панель)
-  - auth.salmin.in (Keycloak)
+- Домен salmin.in, настроенный на сервер
 
 ### Шаги по установке
 
@@ -20,41 +18,35 @@
 git clone https://github.com/Salmin/teamgram-admin.git
 ```
 
-2. Настройте SSL сертификаты:
+2. Скопируйте конфигурацию nginx:
 ```bash
-sudo certbot certonly --nginx -d admin.salmin.in
-sudo certbot certonly --nginx -d auth.salmin.in
-```
-
-3. Скопируйте конфигурации nginx:
-```bash
-sudo cp teamgram-admin/nginx/admin.salmin.in.conf /etc/nginx/conf.d/
-sudo cp teamgram-admin/nginx/auth.salmin.in.conf /etc/nginx/conf.d/
+sudo cp teamgram-admin/nginx/salmin.in.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/salmin.in.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-4. Создайте сети Docker, если они еще не созданы:
+3. Создайте сети Docker, если они еще не созданы:
 ```bash
 docker network create keycloak_network
 docker network create teamgram-network
 ```
 
-5. Запустите Keycloak:
+4. Запустите Keycloak:
 ```bash
 cd keycloak
 docker-compose up -d
 ```
 
-6. Настройте Keycloak:
-- Откройте https://auth.salmin.in
+5. Настройте Keycloak:
+- Откройте https://salmin.in/auth
 - Войдите в консоль администратора (логин и пароль из переменных окружения)
 - Создайте realm `teamgram`
 - Создайте клиент `teamgram-admin`:
   - Client Protocol: OpenID Connect
   - Access Type: public
-  - Valid Redirect URIs: https://admin.salmin.in/*
-  - Web Origins: https://admin.salmin.in
+  - Valid Redirect URIs: https://salmin.in/admin/*
+  - Web Origins: https://salmin.in
 - Создайте роли:
   - `ADMIN_VIEW` - для просмотра пользователей
   - `ADMIN_DELETE` - для удаления пользователей
@@ -64,18 +56,17 @@ docker-compose up -d
   - Mapper: email -> email
   - Mapper: name -> name
 
-7. Запустите teamgram-admin:
+6. Запустите teamgram-admin:
 ```bash
 cd teamgram-admin
 docker-compose up -d
 ```
 
-### Проверка работоспособности
+### URL-адреса
 
-1. Откройте https://admin.salmin.in в браузере
-2. Вы будете перенаправлены на https://auth.salmin.in для аутентификации
-3. Войдите через Google Workspace аккаунт
-4. После успешной аутентификации вы увидите список пользователей
+- Админ-панель: https://salmin.in/admin
+- Keycloak: https://salmin.in/auth
+- Backend API: https://salmin.in/admin/api
 
 ### Структура проекта
 
@@ -83,22 +74,14 @@ docker-compose up -d
 teamgram-admin/
 ├── backend/         # Spring Boot backend
 ├── frontend/        # React frontend
-├── nginx/          # Nginx конфигурации
-│   ├── admin.salmin.in.conf
-│   └── auth.salmin.in.conf
+├── nginx/          # Nginx конфигурация
 └── docker-compose.yml
 ```
-
-### URL-адреса
-
-- Админ-панель: https://admin.salmin.in
-- Keycloak: https://auth.salmin.in
-- Backend API: https://admin.salmin.in/api
 
 ### Порты
 
 - Frontend: 3000 (проксируется через nginx)
-- Backend: 8081
+- Backend: 8081 (проксируется через nginx)
 - Keycloak: 8080 (проксируется через nginx)
 
 ### Сети Docker
@@ -140,7 +123,7 @@ docker-compose ps
 
 2. Проверка доступности Keycloak:
 ```bash
-curl -I https://auth.salmin.in
+curl -I https://salmin.in/auth
 ```
 
 3. Проверка nginx конфигурации:
@@ -148,12 +131,30 @@ curl -I https://auth.salmin.in
 sudo nginx -t
 ```
 
-4. Проверка SSL сертификатов:
+4. Проверка логов nginx:
+```bash
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+```
+
+5. Проверка SSL сертификатов:
 ```bash
 sudo certbot certificates
 ```
 
-5. Проверка логов nginx:
-```bash
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+### Типичные проблемы
+
+1. Если Keycloak недоступен:
+- Проверьте, запущен ли контейнер: `docker-compose ps`
+- Проверьте логи: `docker-compose logs keycloak`
+- Убедитесь, что nginx правильно проксирует запросы: `tail -f /var/log/nginx/error.log`
+
+2. Если админ-панель не загружается:
+- Проверьте, что все контейнеры запущены: `docker-compose ps`
+- Проверьте логи frontend: `docker-compose logs frontend`
+- Проверьте консоль браузера на наличие ошибок
+
+3. Если не работает аутентификация:
+- Проверьте настройки клиента в Keycloak
+- Убедитесь, что URL перенаправления настроен правильно
+- Проверьте логи Keycloak: `docker-compose logs keycloak`
