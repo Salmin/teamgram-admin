@@ -2,90 +2,127 @@
 
 Административная панель для управления пользователями Teamgram.
 
-## Требования
+## Развертывание на сервере
 
-- Java 21
-- Node.js 16+
-- Keycloak 23.0.3
-- Maven
-- npm
+### Предварительные требования
 
-## Структура проекта
+- Docker и Docker Compose
+- Nginx
+- Certbot для SSL сертификатов
+- Домен, настроенный на сервер (admin.salmin.in)
+
+### Шаги по установке
+
+1. Клонируйте репозиторий:
+```bash
+git clone https://github.com/Salmin/teamgram-admin.git
+```
+
+2. Настройте SSL сертификаты:
+```bash
+sudo certbot certonly --nginx -d admin.salmin.in
+```
+
+3. Скопируйте конфигурацию nginx:
+```bash
+sudo cp teamgram-admin/nginx/admin.salmin.in.conf /etc/nginx/conf.d/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+4. Создайте сети Docker, если они еще не созданы:
+```bash
+docker network create keycloak_network
+docker network create teamgram-network
+```
+
+5. Запустите Keycloak (если еще не запущен):
+```bash
+cd keycloak
+docker-compose up -d
+```
+
+6. Настройте Keycloak:
+- Создайте realm `teamgram`
+- Создайте клиент `teamgram-admin`
+- Настройте роли `ADMIN_VIEW` и `ADMIN_DELETE`
+- Настройте Google Workspace как Identity Provider
+
+7. Запустите teamgram-admin:
+```bash
+cd teamgram-admin
+docker-compose up -d
+```
+
+### Проверка работоспособности
+
+1. Откройте https://admin.salmin.in в браузере
+2. Войдите через Google Workspace аккаунт
+3. Убедитесь, что отображается список пользователей
+
+### Структура проекта
 
 ```
 teamgram-admin/
 ├── backend/         # Spring Boot backend
 ├── frontend/        # React frontend
+├── nginx/          # Nginx конфигурация
+└── docker-compose.yml
 ```
 
-## Настройка Keycloak
+### Порты
 
-1. Установите и запустите Keycloak:
+- Frontend: 3000 (проксируется через nginx)
+- Backend: 8081
+- Keycloak: 8080 (проксируется через nginx)
+
+### Сети Docker
+
+- keycloak_network: для взаимодействия с Keycloak
+- teamgram-network: для взаимодействия с Teamgram Server
+
+### Обновление
+
+Для обновления приложения:
+
 ```bash
-docker run -p 8180:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:23.0.3 start-dev
+cd teamgram-admin
+git pull
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
 ```
 
-2. Создайте новый realm `teamgram`
+### Логи
 
-3. Создайте клиент:
-   - Client ID: `teamgram-admin`
-   - Client Protocol: `openid-connect`
-   - Access Type: `public`
-   - Valid Redirect URIs: `http://localhost:3000/*`
-   - Web Origins: `http://localhost:3000`
+Просмотр логов:
 
-4. Создайте роли:
-   - `ADMIN_VIEW` - для просмотра пользователей
-   - `ADMIN_DELETE` - для удаления пользователей
-
-5. Создайте пользователя и назначьте ему роли
-
-## Запуск Backend
-
-1. Перейдите в директорию backend:
 ```bash
-cd backend
+# Все сервисы
+docker-compose logs -f
+
+# Конкретный сервис
+docker-compose logs -f backend
+docker-compose logs -f frontend
 ```
 
-2. Соберите проект:
+### Устранение неполадок
+
+1. Проверка статуса сервисов:
 ```bash
-mvn clean install
+docker-compose ps
 ```
 
-3. Запустите приложение:
+2. Проверка доступности Keycloak:
 ```bash
-mvn spring-boot:run
+curl -I https://salmin.in/auth
 ```
 
-Backend будет доступен по адресу: http://localhost:8080
-
-## Запуск Frontend
-
-1. Перейдите в директорию frontend:
+3. Проверка nginx конфигурации:
 ```bash
-cd frontend
+sudo nginx -t
 ```
 
-2. Установите зависимости:
+4. Проверка SSL сертификатов:
 ```bash
-npm install
-```
-
-3. Запустите приложение:
-```bash
-npm start
-```
-
-Frontend будет доступен по адресу: http://localhost:3000
-
-## Функциональность
-
-- Аутентификация через Keycloak с поддержкой Google Workspace
-- Просмотр списка пользователей Teamgram (требуется роль ADMIN_VIEW)
-- Удаление пользователей (требуется роль ADMIN_DELETE)
-
-## Безопасность
-
-- Все запросы к API защищены JWT токенами
-- Разграничение доступа на основе ролей
-- Поддержка SSO через Google Workspace
+sudo certbot certificates
