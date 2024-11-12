@@ -45,7 +45,7 @@ docker-compose up -d
 - Создайте клиент `teamgram-admin`:
   - Client Protocol: OpenID Connect
   - Access Type: public
-  - Valid Redirect URIs: https://salmin.in/admin/*
+  - Valid Redirect URIs: https://salmin.in/teamgram-admin/*
   - Web Origins: https://salmin.in
 - Создайте роли:
   - `ADMIN_VIEW` - для просмотра пользователей
@@ -64,9 +64,9 @@ docker-compose up -d
 
 ### URL-адреса
 
-- Админ-панель: https://salmin.in/admin
+- Админ-панель: https://salmin.in/teamgram-admin
 - Keycloak: https://salmin.in/auth
-- Backend API: https://salmin.in/admin/api
+- Backend API: https://salmin.in/teamgram-admin/api
 
 ### Структура проекта
 
