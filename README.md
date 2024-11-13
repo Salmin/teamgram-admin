@@ -71,7 +71,7 @@ docker-compose up -d
   - `ADMIN_VIEW` - для просмотра пользователей
   - `ADMIN_DELETE` - для удаления пользователей
 - Настройте Google Workspace как Identity Provider:
-  - Realm Settings -> Identity Providers -> Add provider -> Google
+  - Configure -> Identity Providers -> Google
   - Настройте Client ID и Secret из Google Cloud Console
   - Mapper: email -> email
   - Mapper: name -> name

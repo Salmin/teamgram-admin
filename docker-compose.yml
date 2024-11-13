@@ -10,8 +10,7 @@ services:
     ports:
       - "8081:8081"
     networks:
-      - keycloak_network
-      - teamgram-network
+      - teamgram_network
 
   frontend:
     build:
@@ -25,13 +24,11 @@ services:
     ports:
       - "3000:80"
     networks:
-      - keycloak_network
-      - teamgram-network
+      - teamgram_network
     depends_on:
       - backend
 
 networks:
-  keycloak_network:
-    external: true
-  teamgram-network:
+  teamgram_network:
+    name: teamgram_network
     external: true
