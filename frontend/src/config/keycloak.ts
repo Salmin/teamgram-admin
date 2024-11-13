@@ -1,9 +1,12 @@
 import Keycloak from 'keycloak-js';
 
 const keycloakConfig = {
-    url: 'https://salmin.in/auth',
+    url: 'https://salmin.in',
     realm: 'teamgram',
-    clientId: 'teamgram-admin'
+    clientId: 'teamgram-admin',
+    credentials: {
+        secret: '${CLIENT_SECRET}' // Будет заменено при сборке Docker
+    }
 };
 
 const keycloak = new Keycloak(keycloakConfig);

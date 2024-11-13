@@ -1,9 +1,18 @@
 # Build stage
 FROM node:18-alpine AS build
 WORKDIR /app
+
+# Принимаем CLIENT_SECRET как аргумент сборки
+ARG CLIENT_SECRET
+ENV REACT_APP_CLIENT_SECRET=$CLIENT_SECRET
+
 COPY package*.json ./
 RUN npm install
 COPY . .
+
+# Заменяем placeholder на реальный секрет
+RUN sed -i "s/\${CLIENT_SECRET}/$REACT_APP_CLIENT_SECRET/" src/config/keycloak.ts
+
 RUN npm run build
 
 # Production stage

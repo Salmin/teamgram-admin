@@ -8,8 +8,20 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://salmin.in/auth/realms/teamgram
-          jwk-set-uri: https://salmin.in/auth/realms/teamgram/protocol/openid-connect/certs
+          issuer-uri: https://salmin.in/realms/teamgram
+          jwk-set-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/certs
+      client:
+        registration:
+          teamgram-admin:
+            provider: keycloak
+            client-id: teamgram-admin
+            client-secret: ${CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email,roles
+        provider:
+          keycloak:
+            issuer-uri: https://salmin.in/realms/teamgram
+            user-name-attribute: preferred_username
 
 teamgram:
   api:
@@ -19,6 +31,7 @@ logging:
   level:
     org.springframework.security: DEBUG
     com.teamgram.admin: DEBUG
+    org.springframework.web: DEBUG
 
 cors:
   allowed-origins: https://salmin.in

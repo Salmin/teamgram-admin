@@ -20,7 +20,7 @@ git clone https://github.com/Salmin/teamgram-admin.git
 
 2. Скопируйте конфигурацию nginx:
 ```bash
-sudo cp teamgram-admin/nginx/salmin.in.conf /etc/nginx/sites-available/
+sudo cp teamgram-admin/nginx/salmin.in.conf /etc/nginx/sites-available/salmin.in
 sudo ln -s /etc/nginx/sites-available/salmin.in.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
@@ -39,14 +39,34 @@ docker-compose up -d
 ```
 
 5. Настройте Keycloak:
-- Откройте https://salmin.in/auth
+- Откройте https://salmin.in
 - Войдите в консоль администратора (логин и пароль из переменных окружения)
 - Создайте realm `teamgram`
-- Создайте клиент `teamgram-admin`:
-  - Client Protocol: OpenID Connect
-  - Access Type: public
-  - Valid Redirect URIs: https://salmin.in/teamgram-admin/*
-  - Web Origins: https://salmin.in
+- Создайте клиент:
+  - Client ID: `teamgram-admin`
+  - Client type: OpenID Connect
+  - Client authentication: ON (устанавливает тип доступа как Confidential)
+  - Authorization: ON (Позволяет настраивать детальные политики доступа)
+  - Authentication flow:
+    - [x] Standard flow (включает OAuth2 Authorization Code Flow)
+    - [ ] Direct access grants (Небезопасная передача учетных данных)
+    - [ ] Implicit flow
+    - [x] Service accounts roles
+    - [ ] OAuth 2.0 Device Authorization Grant
+    - [ ] OIDC CIBA Grant
+  - URL настройки:
+    - Root URL: https://salmin.in/teamgram-admin
+    - Home URL: https://salmin.in/teamgram-admin
+    - Valid redirect URIs: https://salmin.in/teamgram-admin/*
+    - Valid post logout redirect URIs: https://salmin.in/teamgram-admin/*
+    - Web origins: https://salmin.in
+  - После создания клиента:
+    - Перейдите во вкладку "Credentials"
+    - Скопируйте Client secret
+    - Создайте файл .env в корне проекта teamgram-admin:
+      ```
+      CLIENT_SECRET=ваш_client_secret
+      ```
 - Создайте роли:
   - `ADMIN_VIEW` - для просмотра пользователей
   - `ADMIN_DELETE` - для удаления пользователей
@@ -64,8 +84,8 @@ docker-compose up -d
 
 ### URL-адреса
 
+- Keycloak: https://salmin.in
 - Админ-панель: https://salmin.in/teamgram-admin
-- Keycloak: https://salmin.in/auth
 - Backend API: https://salmin.in/teamgram-admin/api
 
 ### Структура проекта
@@ -75,6 +95,7 @@ teamgram-admin/
 ├── backend/         # Spring Boot backend
 ├── frontend/        # React frontend
 ├── nginx/          # Nginx конфигурация
+├── .env            # Файл с Client Secret
 └── docker-compose.yml
 ```
 
@@ -123,7 +144,7 @@ docker-compose ps
 
 2. Проверка доступности Keycloak:
 ```bash
-curl -I https://salmin.in/auth
+curl -I https://salmin.in
 ```
 
 3. Проверка nginx конфигурации:
@@ -137,24 +158,48 @@ sudo tail -f /var/log/nginx/access.log
 sudo tail -f /var/log/nginx/error.log
 ```
 
-5. Проверка SSL сертификатов:
+5. Проверка логов Keycloak:
 ```bash
-sudo certbot certificates
+docker-compose logs -f keycloak
 ```
 
 ### Типичные проблемы
 
-1. Если Keycloak недоступен:
-- Проверьте, запущен ли контейнер: `docker-compose ps`
-- Проверьте логи: `docker-compose logs keycloak`
-- Убедитесь, что nginx правильно проксирует запросы: `tail -f /var/log/nginx/error.log`
+1. Если не работает аутентификация:
+- Проверьте настройки клиента в Keycloak:
+  - Client authentication должен быть ON (Confidential)
+  - Standard flow и Service accounts roles должны быть включены
+  - Valid redirect URIs должен соответствовать URL админ-панели
+  - Client secret должен быть правильно указан в .env файле
+- Убедитесь, что роли назначены пользователям
+- Проверьте настройки Google Identity Provider
 
 2. Если админ-панель не загружается:
-- Проверьте, что все контейнеры запущены: `docker-compose ps`
-- Проверьте логи frontend: `docker-compose logs frontend`
 - Проверьте консоль браузера на наличие ошибок
+- Убедитесь, что все сервисы запущены: `docker-compose ps`
+- Проверьте логи frontend: `docker-compose logs frontend`
 
-3. Если не работает аутентификация:
-- Проверьте настройки клиента в Keycloak
-- Убедитесь, что URL перенаправления настроен правильно
-- Проверьте логи Keycloak: `docker-compose logs keycloak`
+3. Если API недоступен:
+- Проверьте логи backend: `docker-compose logs backend`
+- Убедитесь, что JWT токены правильно проверяются
+- Проверьте настройки CORS
+
+### Безопасность
+
+1. Client Secret:
+- Храните Client Secret в безопасном месте
+- Не коммитьте .env файл в репозиторий
+- Регулярно обновляйте Client Secret в Keycloak
+
+2. SSL/TLS:
+- Убедитесь, что SSL сертификаты актуальны
+- Используйте только HTTPS для всех соединений
+- Регулярно обновляйте сертификаты:
+  ```bash
+  sudo certbot renew
+  ```
+
+3. Доступ:
+- Ограничьте доступ к Keycloak только необходимым администраторам
+- Регулярно проверяйте и обновляйте роли пользователей
+- Используйте принцип наименьших привилегий при назначении ролей

@@ -6,11 +6,9 @@ services:
     container_name: teamgram-admin-backend
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/teamgram
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/teamgram/protocol/openid-connect/certs
-      - TEAMGRAM_API_URL=http://teamgram-server:8080
+      - CLIENT_SECRET=${CLIENT_SECRET}
     ports:
-      - "8081:8080"
+      - "8081:8081"
     networks:
       - keycloak_network
       - teamgram-network
@@ -19,12 +17,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - CLIENT_SECRET=${CLIENT_SECRET}
     container_name: teamgram-admin-frontend
     environment:
-      - REACT_APP_API_URL=https://admin.salmin.in/api
-      - REACT_APP_KEYCLOAK_URL=https://salmin.in/auth
-      - REACT_APP_KEYCLOAK_REALM=teamgram
-      - REACT_APP_KEYCLOAK_CLIENT_ID=teamgram-admin
+      - NODE_ENV=production
     ports:
       - "3000:80"
     networks:
