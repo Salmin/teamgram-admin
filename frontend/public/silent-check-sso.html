@@ -6,9 +6,16 @@
 </head>
 <body>
     <script>
-        // Отправляем URL обратно в родительское окно
-        if (window.parent && window.parent !== window) {
-            window.parent.postMessage(location.href, location.origin);
+        try {
+            parent.postMessage(location.href, location.origin);
+        } catch (err) {
+            console.error('Error in silent-check-sso.html:', err);
+            // В случае ошибки, все равно пытаемся отправить сообщение
+            try {
+                parent.postMessage('error', location.origin);
+            } catch (e) {
+                console.error('Failed to send error message:', e);
+            }
         }
     </script>
 </body>

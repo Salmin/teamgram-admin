@@ -1,35 +1,29 @@
 import Keycloak from 'keycloak-js';
 
+// Создаем экземпляр Keycloak с базовой конфигурацией
 const keycloak = new Keycloak({
     url: 'https://salmin.in',
     realm: 'teamgram',
     clientId: 'teamgram-admin'
 });
 
+// Базовая конфигурация для инициализации
 export const initConfig = {
     onLoad: 'login-required' as const,
-    flow: 'standard' as const,
-    responseMode: 'fragment' as const,
-    checkLoginIframe: false
+    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html'
 };
 
+// Добавляем обработчики событий
 keycloak.onAuthSuccess = () => {
-    console.log('Auth success');
-    console.log('Token info:', {
-        hasToken: !!keycloak.token,
-        hasRefreshToken: !!keycloak.refreshToken,
-        tokenParsed: keycloak.tokenParsed,
-        subject: keycloak.subject,
-        realmAccess: keycloak.realmAccess,
-        resourceAccess: keycloak.resourceAccess
+    console.log('Auth success:', {
+        token: !!keycloak.token,
+        refreshToken: !!keycloak.refreshToken,
+        idToken: !!keycloak.idToken
     });
 };
 
 keycloak.onAuthError = (error) => {
     console.error('Auth error:', error);
-    if (error && typeof error === 'object') {
-        console.error('Error details:', JSON.stringify(error, null, 2));
-    }
     console.error('Auth state:', {
         authenticated: keycloak.authenticated,
         token: !!keycloak.token,
@@ -43,27 +37,25 @@ keycloak.onAuthError = (error) => {
 };
 
 keycloak.onAuthRefreshSuccess = () => {
-    console.log('Auth refresh success');
-    console.log('New token:', !!keycloak.token);
+    console.log('Token refresh success');
 };
 
 keycloak.onAuthRefreshError = () => {
-    console.error('Auth refresh error');
-    console.error('Token state:', {
-        token: !!keycloak.token,
-        refreshToken: !!keycloak.refreshToken
-    });
+    console.error('Token refresh error');
+    window.location.reload();
 };
 
 keycloak.onTokenExpired = () => {
-    console.log('Token expired');
-    keycloak.updateToken(70).then((refreshed) => {
-        console.log('Token refreshed:', refreshed);
-    }).catch(console.error);
+    console.log('Token expired, attempting refresh...');
+    keycloak.updateToken(70).catch(() => {
+        console.error('Failed to refresh token');
+        keycloak.login();
+    });
 };
 
 keycloak.onAuthLogout = () => {
     console.log('Auth logout');
+    window.location.reload();
 };
 
 export default keycloak;
