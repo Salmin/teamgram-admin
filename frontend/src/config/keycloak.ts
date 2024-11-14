@@ -18,14 +18,14 @@ const keycloak = new Keycloak({
 
 // Экспортируем конфигурацию для использования при инициализации
 export const initConfig: KeycloakInitOptions = {
-    onLoad: 'login-required' as const,
+    onLoad: 'login-required',
     silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
     checkLoginIframe: false,
-    enableLogging: true,
-    scope: 'openid profile email',
-    responseMode: 'fragment',
-    flow: 'standard',
-    pkceMethod: 'S256'
+    responseMode: 'query',
+    flow: 'implicit',
+    scope: 'openid profile email roles',
+    useNonce: true,
+    enableLogging: true
 };
 
 // Добавляем обработчики событий
@@ -37,7 +37,8 @@ keycloak.onAuthSuccess = () => {
         tokenParsed: keycloak.tokenParsed,
         subject: keycloak.subject,
         realmAccess: keycloak.realmAccess,
-        resourceAccess: keycloak.resourceAccess
+        resourceAccess: keycloak.resourceAccess,
+        idTokenParsed: keycloak.idTokenParsed
     });
 };
 
@@ -51,7 +52,12 @@ keycloak.onAuthError = (error) => {
             url: keycloak.authServerUrl,
             realm: keycloak.realm,
             clientId: keycloak.clientId
-        }
+        },
+        error: error instanceof Error ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        } : error
     });
 };
 

@@ -10,23 +10,6 @@ spring:
         jwt:
           issuer-uri: https://salmin.in/realms/teamgram
           jwk-set-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/certs
-      client:
-        registration:
-          teamgram-admin:
-            provider: keycloak
-            client-id: teamgram-admin
-            client-secret: ${CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            scope: openid,profile,email,roles
-            redirect-uri: https://admin.salmin.in
-        provider:
-          keycloak:
-            issuer-uri: https://salmin.in/realms/teamgram
-            user-name-attribute: preferred_username
-            authorization-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/auth
-            token-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/token
-            user-info-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/userinfo
-            jwk-set-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/certs
 
 teamgram:
   api:
