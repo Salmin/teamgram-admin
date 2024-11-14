@@ -1,34 +1,20 @@
 import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
 
-// Создаем конфигурацию как простой объект
-const config = {
+const keycloak = new Keycloak({
     url: 'https://salmin.in',
     realm: 'teamgram',
     clientId: 'teamgram-admin'
-};
-
-console.log('Creating Keycloak instance with config:', config);
-
-// Создаем экземпляр Keycloak с базовой конфигурацией
-const keycloak = new Keycloak({
-    url: config.url,
-    realm: config.realm,
-    clientId: config.clientId
 });
 
-// Экспортируем конфигурацию для использования при инициализации
 export const initConfig: KeycloakInitOptions = {
     onLoad: 'login-required',
     silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
     checkLoginIframe: false,
-    responseMode: 'query',
-    flow: 'implicit',
-    scope: 'openid profile email roles',
-    useNonce: true,
-    enableLogging: true
+    pkceMethod: 'S256',
+    scope: 'openid profile email',
+    responseMode: 'fragment'
 };
 
-// Добавляем обработчики событий
 keycloak.onAuthSuccess = () => {
     console.log('Auth success');
     console.log('Token info:', {
@@ -37,8 +23,7 @@ keycloak.onAuthSuccess = () => {
         tokenParsed: keycloak.tokenParsed,
         subject: keycloak.subject,
         realmAccess: keycloak.realmAccess,
-        resourceAccess: keycloak.resourceAccess,
-        idTokenParsed: keycloak.idTokenParsed
+        resourceAccess: keycloak.resourceAccess
     });
 };
 
@@ -52,12 +37,7 @@ keycloak.onAuthError = (error) => {
             url: keycloak.authServerUrl,
             realm: keycloak.realm,
             clientId: keycloak.clientId
-        },
-        error: error instanceof Error ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-        } : error
+        }
     });
 };
 

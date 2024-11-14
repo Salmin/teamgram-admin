@@ -11,24 +11,9 @@ const App: React.FC = () => {
     const initKeycloak = async () => {
       try {
         console.log('Начало инициализации Keycloak...');
-        console.log('Keycloak instance:', {
-          authServerUrl: keycloak.authServerUrl,
-          realm: keycloak.realm,
-          clientId: keycloak.clientId,
-          responseMode: keycloak.responseMode,
-          responseType: keycloak.responseType
-        });
-
-        console.log('Init config:', {
-          ...initConfig,
-          redirectUri: window.location.origin
-        });
-
+        
         // Попытка инициализации
-        const authenticated = await keycloak.init({
-          ...initConfig,
-          redirectUri: window.location.origin
-        });
+        const authenticated = await keycloak.init(initConfig);
 
         console.log('Keycloak initialized, authenticated:', authenticated);
         console.log('Init state:', {
@@ -61,14 +46,7 @@ const App: React.FC = () => {
           };
         } else {
           console.log('Пользователь не аутентифицирован, перенаправление на страницу входа...');
-          try {
-            await keycloak.login({
-              redirectUri: window.location.origin
-            });
-          } catch (loginError) {
-            console.error('Login error:', loginError);
-            setError('Ошибка входа: ' + (loginError instanceof Error ? loginError.message : 'неизвестная ошибка'));
-          }
+          await keycloak.login();
         }
       } catch (err) {
         console.error('Keycloak init error:', err);
