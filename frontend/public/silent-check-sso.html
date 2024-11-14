@@ -2,20 +2,11 @@
 <html>
 <head>
     <title>Silent SSO check</title>
-    <meta charset="utf-8">
 </head>
 <body>
     <script>
-        try {
-            parent.postMessage(location.href, location.origin);
-        } catch (err) {
-            console.error('Error in silent-check-sso.html:', err);
-            // В случае ошибки, все равно пытаемся отправить сообщение
-            try {
-                parent.postMessage('error', location.origin);
-            } catch (e) {
-                console.error('Failed to send error message:', e);
-            }
+        if (window.parent) {
+            window.parent.postMessage(location.href, location.origin);
         }
     </script>
 </body>

@@ -13,7 +13,10 @@ const App: React.FC = () => {
         console.log('Начало инициализации Keycloak...');
         
         // Попытка инициализации
-        const authenticated = await keycloak.init(initConfig);
+        const authenticated = await keycloak.init({
+          ...initConfig,
+          redirectUri: window.location.origin
+        });
 
         console.log('Keycloak initialized:', {
           authenticated,
@@ -24,36 +27,11 @@ const App: React.FC = () => {
 
         if (!authenticated) {
           console.log('Пользователь не аутентифицирован, перенаправление на страницу входа...');
-          try {
-            await keycloak.login({
-              redirectUri: window.location.origin
-            });
-          } catch (loginError) {
-            console.error('Login error:', loginError);
-            throw loginError;
-          }
+          await keycloak.login({
+            redirectUri: window.location.origin
+          });
           return;
         }
-
-        // Настраиваем периодическое обновление токена
-        const tokenUpdateInterval = setInterval(() => {
-          if (keycloak.token) {
-            keycloak.updateToken(70)
-              .then(refreshed => {
-                if (refreshed) {
-                  console.log('Token was successfully refreshed');
-                }
-              })
-              .catch(error => {
-                console.error('Failed to refresh the token:', error);
-                keycloak.login();
-              });
-          }
-        }, 60000);
-
-        return () => {
-          clearInterval(tokenUpdateInterval);
-        };
 
       } catch (err) {
         console.error('Keycloak init error:', err);
@@ -67,13 +45,8 @@ const App: React.FC = () => {
           });
           errorMessage += ': ' + err.message;
         } else if (err && typeof err === 'object') {
-          try {
-            console.error('Error object:', JSON.stringify(err, null, 2));
-            errorMessage += ': ' + JSON.stringify(err);
-          } catch (e) {
-            console.error('Error stringifying error object:', e);
-            errorMessage += ': ' + String(err);
-          }
+          console.error('Error object:', err);
+          errorMessage += ': ' + JSON.stringify(err);
         }
         
         setError(errorMessage);

@@ -1,38 +1,29 @@
-import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
+import Keycloak from 'keycloak-js';
 
-// Создаем экземпляр Keycloak с базовой конфигурацией
 const keycloak = new Keycloak({
     url: 'https://salmin.in',
     realm: 'teamgram',
     clientId: 'teamgram-admin'
 });
 
-// Базовая конфигурация для инициализации
-export const initConfig: KeycloakInitOptions = {
-    onLoad: 'login-required',
-    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-    pkceMethod: 'S256' as const,
+export const initConfig = {
+    onLoad: 'login-required' as const,
     checkLoginIframe: false,
-    enableLogging: true
+    enableLogging: true,
+    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html'
 };
 
-// Добавляем обработчики событий
 keycloak.onAuthSuccess = () => {
     console.log('Auth success:', {
         token: !!keycloak.token,
         refreshToken: !!keycloak.refreshToken,
         idToken: !!keycloak.idToken,
-        tokenParsed: keycloak.tokenParsed,
-        realmAccess: keycloak.realmAccess,
-        resourceAccess: keycloak.resourceAccess
+        tokenParsed: keycloak.tokenParsed
     });
 };
 
 keycloak.onAuthError = (error) => {
     console.error('Auth error:', error);
-    if (error && typeof error === 'object') {
-        console.error('Error details:', JSON.stringify(error, null, 2));
-    }
     console.error('Auth state:', {
         authenticated: keycloak.authenticated,
         token: !!keycloak.token,
@@ -46,29 +37,18 @@ keycloak.onAuthError = (error) => {
 };
 
 keycloak.onAuthRefreshSuccess = () => {
-    console.log('Token refresh success:', {
-        token: !!keycloak.token,
-        refreshToken: !!keycloak.refreshToken,
-        tokenParsed: keycloak.tokenParsed
-    });
+    console.log('Token refresh success');
 };
 
 keycloak.onAuthRefreshError = () => {
     console.error('Token refresh error');
-    console.error('Current state:', {
-        token: !!keycloak.token,
-        refreshToken: !!keycloak.refreshToken,
-        authenticated: keycloak.authenticated,
-        tokenParsed: keycloak.tokenParsed
-    });
-    // При ошибке обновления токена пробуем перелогиниться
-    keycloak.login();
+    window.location.reload();
 };
 
 keycloak.onTokenExpired = () => {
-    console.log('Token expired, attempting refresh...');
-    keycloak.updateToken(70).catch((error) => {
-        console.error('Failed to refresh token:', error);
+    console.log('Token expired');
+    keycloak.updateToken(70).catch(() => {
+        console.error('Failed to refresh token');
         keycloak.login();
     });
 };
