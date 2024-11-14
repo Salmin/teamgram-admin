@@ -6,7 +6,10 @@
 </head>
 <body>
     <script>
-        parent.postMessage(location.href, location.origin);
+        // Отправляем URL обратно в родительское окно
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage(location.href, location.origin);
+        }
     </script>
 </body>
 </html>

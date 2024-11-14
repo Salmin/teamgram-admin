@@ -12,7 +12,7 @@ export const initConfig: KeycloakInitOptions = {
     checkLoginIframe: false,
     pkceMethod: 'S256',
     scope: 'openid profile email',
-    responseMode: 'fragment'
+    redirectUri: window.location.origin
 };
 
 keycloak.onAuthSuccess = () => {
