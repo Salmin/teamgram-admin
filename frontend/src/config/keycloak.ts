@@ -6,10 +6,15 @@ const keycloakConfig = {
     clientId: 'teamgram-admin',
     credentials: {
         secret: '${CLIENT_SECRET}'
-    },
-    redirectUri: 'https://admin.salmin.in'
+    }
 };
 
-const keycloak = new Keycloak(keycloakConfig);
+// Инициализация без явного указания redirectUri
+// Keycloak будет использовать текущий URL без слеша в конце
+const keycloak = new Keycloak({
+    url: keycloakConfig.url,
+    realm: keycloakConfig.realm,
+    clientId: keycloakConfig.clientId
+});
 
 export default keycloak;
