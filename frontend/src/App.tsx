@@ -10,24 +10,66 @@ const App: React.FC = () => {
   useEffect(() => {
     const initKeycloak = async () => {
       try {
+        console.log('Начало инициализации Keycloak...');
+        console.log('Keycloak config:', {
+          url: keycloak.authServerUrl,
+          realm: keycloak.realm,
+          clientId: keycloak.clientId,
+          // Не логируем client secret в production
+        });
+
         const authenticated = await keycloak.init({
           onLoad: 'login-required',
           checkLoginIframe: false,
-          pkceMethod: 'S256'
+          pkceMethod: 'S256',
+          enableLogging: true // Включаем логирование Keycloak
         });
 
-        if (!authenticated) {
-          setError('Ошибка аутентификации');
+        console.log('Keycloak initialized, authenticated:', authenticated);
+        
+        if (authenticated) {
+          console.log('Пользователь аутентифицирован');
+          const token = keycloak.token;
+          console.log('Token получен:', !!token);
+          
+          // Подписываемся на обновление токена
+          keycloak.onTokenExpired = () => {
+            console.log('Token expired, attempting to refresh...');
+            keycloak.updateToken(70).then((refreshed) => {
+              console.log('Token refreshed:', refreshed);
+            }).catch(console.error);
+          };
+        } else {
+          console.log('Пользователь не аутентифицирован');
+          setError('Ошибка аутентификации: пользователь не аутентифицирован');
         }
       } catch (err) {
         console.error('Keycloak init error:', err);
-        setError('Ошибка инициализации Keycloak');
+        let errorMessage = 'Ошибка инициализации Keycloak';
+        if (err instanceof Error) {
+          console.error('Error details:', {
+            message: err.message,
+            stack: err.stack,
+            name: err.name
+          });
+          errorMessage += ': ' + err.message;
+        }
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
     };
 
     initKeycloak();
+
+    return () => {
+      // Cleanup
+      try {
+        keycloak.clearToken();
+      } catch (e) {
+        console.error('Error during cleanup:', e);
+      }
+    };
   }, []);
 
   if (isLoading) {
@@ -49,6 +91,9 @@ const App: React.FC = () => {
         <Box mt={4}>
           <Typography color="error" variant="h5" align="center">
             {error}
+          </Typography>
+          <Typography color="textSecondary" variant="body1" align="center" mt={2}>
+            Проверьте консоль браузера для получения дополнительной информации.
           </Typography>
         </Box>
       </Container>

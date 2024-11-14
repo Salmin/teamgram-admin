@@ -5,7 +5,7 @@ const keycloakConfig = {
     realm: 'teamgram',
     clientId: 'teamgram-admin',
     credentials: {
-        secret: '${CLIENT_SECRET}' // Будет заменено при сборке Docker
+        secret: '${CLIENT_SECRET}'
     }
 };
 

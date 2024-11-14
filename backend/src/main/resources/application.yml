@@ -34,9 +34,9 @@ logging:
     org.springframework.web: DEBUG
 
 cors:
-  allowed-origins: https://salmin.in
+  allowed-origins: https://admin.salmin.in
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-  allowed-headers: Authorization,Content-Type
+  allowed-headers: Authorization,Content-Type,Accept,Origin,X-Requested-With
   exposed-headers: Authorization
   allow-credentials: true
   max-age: 3600
