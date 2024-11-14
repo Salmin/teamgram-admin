@@ -15,30 +15,26 @@ const App: React.FC = () => {
           url: keycloak.authServerUrl,
           realm: keycloak.realm,
           clientId: keycloak.clientId,
-          redirectUri: initConfig.redirectUri,
-          token: initConfig.token ? 'present' : 'absent'
+          initConfig: {
+            ...initConfig,
+            redirectUri: window.location.origin
+          }
         });
 
-        // Добавляем обработчик событий перед инициализацией
-        keycloak.onAuthSuccess = () => {
-          console.log('Auth success');
-        };
-        keycloak.onAuthError = (error) => {
-          console.error('Auth error:', error);
-        };
-        keycloak.onAuthRefreshSuccess = () => {
-          console.log('Auth refresh success');
-        };
-        keycloak.onAuthRefreshError = () => {
-          console.error('Auth refresh error');
-        };
-        keycloak.onTokenExpired = () => {
-          console.log('Token expired');
-        };
-
-        const authenticated = await keycloak.init(initConfig);
+        const authenticated = await keycloak.init({
+          ...initConfig,
+          redirectUri: window.location.origin
+        });
 
         console.log('Keycloak initialized, authenticated:', authenticated);
+        console.log('Init state:', {
+          authenticated: keycloak.authenticated,
+          token: !!keycloak.token,
+          refreshToken: !!keycloak.refreshToken,
+          subject: keycloak.subject,
+          realmAccess: keycloak.realmAccess,
+          resourceAccess: keycloak.resourceAccess
+        });
         
         if (authenticated) {
           console.log('Пользователь аутентифицирован');
@@ -53,11 +49,18 @@ const App: React.FC = () => {
             console.log('Token expired, attempting to refresh...');
             keycloak.updateToken(70).then((refreshed) => {
               console.log('Token refreshed:', refreshed);
-            }).catch(console.error);
+            }).catch(err => {
+              console.error('Token refresh error:', err);
+              setError('Ошибка обновления токена: ' + (err.message || 'неизвестная ошибка'));
+            });
           };
         } else {
           console.log('Пользователь не аутентифицирован');
           setError('Ошибка аутентификации: пользователь не аутентифицирован');
+          // Попытка перенаправить на страницу входа
+          await keycloak.login({
+            redirectUri: window.location.origin
+          });
         }
       } catch (err) {
         console.error('Keycloak init error:', err);
@@ -71,6 +74,11 @@ const App: React.FC = () => {
           errorMessage += ': ' + err.message;
         }
         setError(errorMessage);
+
+        // Попытка перезагрузить страницу при ошибке
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       } finally {
         setIsLoading(false);
       }
