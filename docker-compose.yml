@@ -16,8 +16,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - CLIENT_SECRET=${CLIENT_SECRET}
     container_name: teamgram-admin-frontend
     environment:
       - NODE_ENV=production

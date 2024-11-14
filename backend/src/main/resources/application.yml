@@ -23,6 +23,10 @@ spring:
           keycloak:
             issuer-uri: https://salmin.in/realms/teamgram
             user-name-attribute: preferred_username
+            authorization-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/auth
+            token-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/token
+            user-info-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/userinfo
+            jwk-set-uri: https://salmin.in/realms/teamgram/protocol/openid-connect/certs
 
 teamgram:
   api:

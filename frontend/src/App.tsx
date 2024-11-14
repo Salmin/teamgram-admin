@@ -15,8 +15,26 @@ const App: React.FC = () => {
           url: keycloak.authServerUrl,
           realm: keycloak.realm,
           clientId: keycloak.clientId,
-          redirectUri: initConfig.redirectUri
+          redirectUri: initConfig.redirectUri,
+          token: initConfig.token ? 'present' : 'absent'
         });
+
+        // Добавляем обработчик событий перед инициализацией
+        keycloak.onAuthSuccess = () => {
+          console.log('Auth success');
+        };
+        keycloak.onAuthError = (error) => {
+          console.error('Auth error:', error);
+        };
+        keycloak.onAuthRefreshSuccess = () => {
+          console.log('Auth refresh success');
+        };
+        keycloak.onAuthRefreshError = () => {
+          console.error('Auth refresh error');
+        };
+        keycloak.onTokenExpired = () => {
+          console.log('Token expired');
+        };
 
         const authenticated = await keycloak.init(initConfig);
 
@@ -24,8 +42,11 @@ const App: React.FC = () => {
         
         if (authenticated) {
           console.log('Пользователь аутентифицирован');
-          const token = keycloak.token;
-          console.log('Token получен:', !!token);
+          console.log('Token info:', {
+            hasToken: !!keycloak.token,
+            hasRefreshToken: !!keycloak.refreshToken,
+            tokenParsed: keycloak.tokenParsed
+          });
           
           // Подписываемся на обновление токена
           keycloak.onTokenExpired = () => {
