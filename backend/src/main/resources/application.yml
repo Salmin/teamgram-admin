@@ -18,6 +18,7 @@ spring:
             client-secret: ${CLIENT_SECRET}
             authorization-grant-type: authorization_code
             scope: openid,profile,email,roles
+            redirect-uri: https://admin.salmin.in
         provider:
           keycloak:
             issuer-uri: https://salmin.in/realms/teamgram

@@ -15,14 +15,15 @@ const App: React.FC = () => {
           url: keycloak.authServerUrl,
           realm: keycloak.realm,
           clientId: keycloak.clientId,
-          // Не логируем client secret в production
+          redirectUri: window.location.origin
         });
 
         const authenticated = await keycloak.init({
           onLoad: 'login-required',
           checkLoginIframe: false,
           pkceMethod: 'S256',
-          enableLogging: true // Включаем логирование Keycloak
+          redirectUri: window.location.origin,
+          silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html'
         });
 
         console.log('Keycloak initialized, authenticated:', authenticated);

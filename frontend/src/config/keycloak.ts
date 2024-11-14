@@ -6,7 +6,8 @@ const keycloakConfig = {
     clientId: 'teamgram-admin',
     credentials: {
         secret: '${CLIENT_SECRET}'
-    }
+    },
+    redirectUri: 'https://admin.salmin.in'
 };
 
 const keycloak = new Keycloak(keycloakConfig);
