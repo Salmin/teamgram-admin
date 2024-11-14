@@ -7,12 +7,9 @@ const keycloak = new Keycloak({
 });
 
 export const initConfig: KeycloakInitOptions = {
-    onLoad: 'login-required',
-    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
+    onLoad: 'login-required' as const,
     checkLoginIframe: false,
-    pkceMethod: 'S256',
-    scope: 'openid profile email',
-    redirectUri: window.location.origin
+    pkceMethod: 'S256'
 };
 
 keycloak.onAuthSuccess = () => {

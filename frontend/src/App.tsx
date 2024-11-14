@@ -11,59 +11,21 @@ const App: React.FC = () => {
     const initKeycloak = async () => {
       try {
         console.log('Начало инициализации Keycloak...');
-        console.log('Используем конфигурацию:', initConfig);
         
         // Попытка инициализации
         const authenticated = await keycloak.init(initConfig);
 
-        console.log('Keycloak initialized, authenticated:', authenticated);
-        console.log('Init state:', {
-          authenticated: keycloak.authenticated,
-          token: !!keycloak.token,
-          refreshToken: !!keycloak.refreshToken,
-          subject: keycloak.subject,
-          realmAccess: keycloak.realmAccess,
-          resourceAccess: keycloak.resourceAccess,
-          tokenParsed: keycloak.tokenParsed
-        });
-        
         if (authenticated) {
           console.log('Пользователь аутентифицирован');
-          console.log('Token info:', {
-            hasToken: !!keycloak.token,
-            hasRefreshToken: !!keycloak.refreshToken,
-            tokenParsed: keycloak.tokenParsed
-          });
-          
-          // Подписываемся на обновление токена
-          keycloak.onTokenExpired = () => {
-            console.log('Token expired, attempting to refresh...');
-            keycloak.updateToken(70).then((refreshed) => {
-              console.log('Token refreshed:', refreshed);
-            }).catch(err => {
-              console.error('Token refresh error:', err);
-              setError('Ошибка обновления токена: ' + (err.message || 'неизвестная ошибка'));
-            });
-          };
         } else {
           console.log('Пользователь не аутентифицирован, перенаправление на страницу входа...');
-          try {
-            // Используем конфигурацию по умолчанию для login
-            await keycloak.login();
-          } catch (loginError) {
-            console.error('Login error:', loginError);
-            setError('Ошибка входа: ' + (loginError instanceof Error ? loginError.message : 'неизвестная ошибка'));
-          }
+          await keycloak.login();
         }
       } catch (err) {
         console.error('Keycloak init error:', err);
         let errorMessage = 'Ошибка инициализации Keycloak';
         if (err instanceof Error) {
-          console.error('Error details:', {
-            message: err.message,
-            stack: err.stack,
-            name: err.name
-          });
+          console.error('Error details:', err);
           errorMessage += ': ' + err.message;
         } else if (typeof err === 'object' && err !== null) {
           console.error('Error object:', err);
@@ -78,7 +40,6 @@ const App: React.FC = () => {
     initKeycloak();
 
     return () => {
-      // Cleanup
       try {
         keycloak.clearToken();
       } catch (e) {
