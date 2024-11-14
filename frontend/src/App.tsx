@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CircularProgress, Container, Box, Typography } from '@mui/material';
-import keycloak from './config/keycloak';
+import keycloak, { initConfig } from './config/keycloak';
 import UserList from './components/UserList';
 
 const App: React.FC = () => {
@@ -15,16 +15,10 @@ const App: React.FC = () => {
           url: keycloak.authServerUrl,
           realm: keycloak.realm,
           clientId: keycloak.clientId,
-          currentLocation: window.location.href.replace(/\/$/, '') // Удаляем слеш в конце
+          redirectUri: initConfig.redirectUri
         });
 
-        const authenticated = await keycloak.init({
-          onLoad: 'login-required',
-          checkLoginIframe: false,
-          pkceMethod: 'S256',
-          redirectUri: window.location.origin.replace(/\/$/, ''), // Удаляем слеш в конце
-          silentCheckSsoRedirectUri: window.location.origin.replace(/\/$/, '') + '/silent-check-sso.html'
-        });
+        const authenticated = await keycloak.init(initConfig);
 
         console.log('Keycloak initialized, authenticated:', authenticated);
         

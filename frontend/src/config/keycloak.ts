@@ -1,6 +1,6 @@
-import Keycloak from 'keycloak-js';
+import Keycloak, { KeycloakConfig, KeycloakInitOptions } from 'keycloak-js';
 
-const keycloakConfig = {
+const keycloakConfig: KeycloakConfig & { credentials?: { secret: string } } = {
     url: 'https://salmin.in',
     realm: 'teamgram',
     clientId: 'teamgram-admin',
@@ -9,12 +9,14 @@ const keycloakConfig = {
     }
 };
 
-// Инициализация без явного указания redirectUri
-// Keycloak будет использовать текущий URL без слеша в конце
-const keycloak = new Keycloak({
-    url: keycloakConfig.url,
-    realm: keycloakConfig.realm,
-    clientId: keycloakConfig.clientId
-});
+const keycloak = new Keycloak(keycloakConfig);
+
+// Экспортируем конфигурацию для использования при инициализации
+export const initConfig: KeycloakInitOptions = {
+    onLoad: 'login-required' as const,
+    checkLoginIframe: false,
+    pkceMethod: 'S256',
+    redirectUri: window.location.origin // без слеша в конце
+};
 
 export default keycloak;
