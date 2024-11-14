@@ -11,16 +11,20 @@ const App: React.FC = () => {
     const initKeycloak = async () => {
       try {
         console.log('Начало инициализации Keycloak...');
-        console.log('Keycloak config:', {
-          url: keycloak.authServerUrl,
+        console.log('Keycloak instance:', {
+          authServerUrl: keycloak.authServerUrl,
           realm: keycloak.realm,
           clientId: keycloak.clientId,
-          initConfig: {
-            ...initConfig,
-            redirectUri: window.location.origin
-          }
+          responseMode: keycloak.responseMode,
+          responseType: keycloak.responseType
         });
 
+        console.log('Init config:', {
+          ...initConfig,
+          redirectUri: window.location.origin
+        });
+
+        // Попытка инициализации
         const authenticated = await keycloak.init({
           ...initConfig,
           redirectUri: window.location.origin
@@ -33,7 +37,8 @@ const App: React.FC = () => {
           refreshToken: !!keycloak.refreshToken,
           subject: keycloak.subject,
           realmAccess: keycloak.realmAccess,
-          resourceAccess: keycloak.resourceAccess
+          resourceAccess: keycloak.resourceAccess,
+          tokenParsed: keycloak.tokenParsed
         });
         
         if (authenticated) {
@@ -55,12 +60,15 @@ const App: React.FC = () => {
             });
           };
         } else {
-          console.log('Пользователь не аутентифицирован');
-          setError('Ошибка аутентификации: пользователь не аутентифицирован');
-          // Попытка перенаправить на страницу входа
-          await keycloak.login({
-            redirectUri: window.location.origin
-          });
+          console.log('Пользователь не аутентифицирован, перенаправление на страницу входа...');
+          try {
+            await keycloak.login({
+              redirectUri: window.location.origin
+            });
+          } catch (loginError) {
+            console.error('Login error:', loginError);
+            setError('Ошибка входа: ' + (loginError instanceof Error ? loginError.message : 'неизвестная ошибка'));
+          }
         }
       } catch (err) {
         console.error('Keycloak init error:', err);
@@ -72,13 +80,11 @@ const App: React.FC = () => {
             name: err.name
           });
           errorMessage += ': ' + err.message;
+        } else if (typeof err === 'object' && err !== null) {
+          console.error('Error object:', err);
+          errorMessage += ': ' + JSON.stringify(err);
         }
         setError(errorMessage);
-
-        // Попытка перезагрузить страницу при ошибке
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
       } finally {
         setIsLoading(false);
       }

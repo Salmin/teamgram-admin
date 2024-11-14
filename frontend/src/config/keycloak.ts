@@ -7,9 +7,11 @@ const config = {
     clientId: 'teamgram-admin'
 };
 
+console.log('Creating Keycloak instance with config:', config);
+
 // Создаем экземпляр Keycloak с базовой конфигурацией
 const keycloak = new Keycloak({
-    url: config.url + '/auth', // добавляем /auth к URL
+    url: config.url,
     realm: config.realm,
     clientId: config.clientId
 });
@@ -21,7 +23,8 @@ export const initConfig: KeycloakInitOptions = {
     checkLoginIframe: false,
     enableLogging: true,
     scope: 'openid profile email',
-    responseMode: 'query',
+    responseMode: 'fragment',
+    flow: 'standard',
     pkceMethod: 'S256'
 };
 
@@ -43,7 +46,12 @@ keycloak.onAuthError = (error) => {
     console.error('Auth state:', {
         authenticated: keycloak.authenticated,
         token: !!keycloak.token,
-        refreshToken: !!keycloak.refreshToken
+        refreshToken: !!keycloak.refreshToken,
+        config: {
+            url: keycloak.authServerUrl,
+            realm: keycloak.realm,
+            clientId: keycloak.clientId
+        }
     });
 };
 
