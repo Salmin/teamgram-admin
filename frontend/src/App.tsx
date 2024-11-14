@@ -12,7 +12,8 @@ const App: React.FC = () => {
       try {
         const authenticated = await keycloak.init({
           onLoad: 'login-required',
-          checkLoginIframe: false
+          checkLoginIframe: false,
+          pkceMethod: 'S256'
         });
 
         if (!authenticated) {
