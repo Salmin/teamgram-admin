@@ -1,4 +1,4 @@
-import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
+import Keycloak from 'keycloak-js';
 
 const keycloak = new Keycloak({
     url: 'https://salmin.in',
@@ -6,10 +6,11 @@ const keycloak = new Keycloak({
     clientId: 'teamgram-admin'
 });
 
-export const initConfig: KeycloakInitOptions = {
+export const initConfig = {
     onLoad: 'login-required' as const,
-    checkLoginIframe: false,
-    pkceMethod: 'S256'
+    flow: 'standard' as const,
+    responseMode: 'fragment' as const,
+    checkLoginIframe: false
 };
 
 keycloak.onAuthSuccess = () => {
@@ -26,6 +27,9 @@ keycloak.onAuthSuccess = () => {
 
 keycloak.onAuthError = (error) => {
     console.error('Auth error:', error);
+    if (error && typeof error === 'object') {
+        console.error('Error details:', JSON.stringify(error, null, 2));
+    }
     console.error('Auth state:', {
         authenticated: keycloak.authenticated,
         token: !!keycloak.token,

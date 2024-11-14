@@ -12,6 +12,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -41,19 +42,36 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://admin.salmin.in"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList(
+        
+        // Разрешаем только frontend домен
+        configuration.setAllowedOrigins(List.of("https://admin.salmin.in"));
+        
+        // Разрешаем все стандартные методы
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        
+        // Разрешаем все необходимые заголовки
+        configuration.setAllowedHeaders(List.of(
             "Authorization",
             "Content-Type",
             "Accept",
             "X-Requested-With",
-            "remember-me",
-            "Origin",
+            "Cache-Control",
             "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
+            "Access-Control-Request-Headers",
+            "Origin"
         ));
+        
+        // Разрешаем заголовки в ответе
+        configuration.setExposedHeaders(List.of(
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials",
+            "Authorization"
+        ));
+        
+        // Разрешаем credentials
         configuration.setAllowCredentials(true);
+        
+        // Кэшируем preflight запросы на 1 час
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

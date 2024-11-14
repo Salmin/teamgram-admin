@@ -11,26 +11,51 @@ const App: React.FC = () => {
     const initKeycloak = async () => {
       try {
         console.log('Начало инициализации Keycloak...');
+        console.log('Используем конфигурацию:', {
+          ...initConfig,
+          clientId: keycloak.clientId,
+          realm: keycloak.realm,
+          url: keycloak.authServerUrl
+        });
         
         // Попытка инициализации
         const authenticated = await keycloak.init(initConfig);
 
-        if (authenticated) {
-          console.log('Пользователь аутентифицирован');
-        } else {
+        console.log('Keycloak initialized:', {
+          authenticated,
+          token: !!keycloak.token,
+          refreshToken: !!keycloak.refreshToken
+        });
+
+        if (!authenticated) {
           console.log('Пользователь не аутентифицирован, перенаправление на страницу входа...');
-          await keycloak.login();
+          // Не используем await здесь, так как login() перенаправляет на страницу Keycloak
+          keycloak.login({
+            redirectUri: window.location.origin,
+            scope: 'openid profile email'
+          });
         }
       } catch (err) {
         console.error('Keycloak init error:', err);
         let errorMessage = 'Ошибка инициализации Keycloak';
+        
         if (err instanceof Error) {
-          console.error('Error details:', err);
+          console.error('Error details:', {
+            message: err.message,
+            stack: err.stack,
+            name: err.name
+          });
           errorMessage += ': ' + err.message;
-        } else if (typeof err === 'object' && err !== null) {
-          console.error('Error object:', err);
-          errorMessage += ': ' + JSON.stringify(err);
+        } else if (err && typeof err === 'object') {
+          try {
+            console.error('Error object:', JSON.stringify(err, null, 2));
+            errorMessage += ': ' + JSON.stringify(err);
+          } catch (e) {
+            console.error('Error stringifying error object:', e);
+            errorMessage += ': ' + String(err);
+          }
         }
+        
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -73,6 +98,22 @@ const App: React.FC = () => {
           </Typography>
         </Box>
       </Container>
+    );
+  }
+
+  if (!keycloak.authenticated) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+      >
+        <CircularProgress />
+        <Typography variant="body1" ml={2}>
+          Выполняется вход в систему...
+        </Typography>
+      </Box>
     );
   }
 
