@@ -1,115 +1,94 @@
 import React, { useEffect, useState } from 'react';
-import { 
-    Table, 
-    TableBody, 
-    TableCell, 
-    TableContainer, 
-    TableHead, 
-    TableRow, 
-    Paper, 
-    IconButton,
-    Typography,
-    Box
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Typography,
+  Box
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { User } from '../types/user';
-import { userApi } from '../services/api';
-import keycloak from '../config/keycloak';
+import { deleteUser, getUsers } from '../services/api';
 
 const UserList: React.FC = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [error, setError] = useState<string>('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState<string>('');
 
-    const loadUsers = async () => {
-        try {
-            const data = await userApi.getUsers();
-            setUsers(data);
-            setError('');
-        } catch (err) {
-            setError('Ошибка при загрузке пользователей');
-            console.error('Error loading users:', err);
-        }
-    };
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
-    const handleDelete = async (userId: number) => {
-        if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-            try {
-                await userApi.deleteUser(userId);
-                setUsers(users.filter(user => user.userId !== userId));
-                setError('');
-            } catch (err) {
-                setError('Ошибка при удалении пользователя');
-                console.error('Error deleting user:', err);
-            }
-        }
-    };
+  const loadUsers = async () => {
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } catch (err) {
+      setError('Ошибка при загрузке пользователей');
+      console.error('Error loading users:', err);
+    }
+  };
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+  const handleDelete = async (userId: number) => {
+    try {
+      await deleteUser(userId);
+      setUsers(users.filter(user => user.id !== userId));
+    } catch (err) {
+      setError('Ошибка при удалении пользователя');
+      console.error('Error deleting user:', err);
+    }
+  };
 
-    const formatDate = (timestamp: number) => {
-        return new Date(timestamp * 1000).toLocaleString();
-    };
-
-    const canDelete = keycloak.hasRealmRole('ADMIN_DELETE');
-
+  if (error) {
     return (
-        <Box sx={{ padding: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                Пользователи Teamgram
-            </Typography>
-            
-            {error && (
-                <Typography color="error" sx={{ mb: 2 }}>
-                    {error}
-                </Typography>
-            )}
-
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>ID</TableCell>
-                            <TableCell>Телефон</TableCell>
-                            <TableCell>Имя</TableCell>
-                            <TableCell>Фамилия</TableCell>
-                            <TableCell>Имя пользователя</TableCell>
-                            <TableCell>Дата создания</TableCell>
-                            <TableCell>Статус</TableCell>
-                            {canDelete && <TableCell>Действия</TableCell>}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {users.map((user) => (
-                            <TableRow key={user.userId}>
-                                <TableCell>{user.userId}</TableCell>
-                                <TableCell>{user.phone}</TableCell>
-                                <TableCell>{user.firstName}</TableCell>
-                                <TableCell>{user.lastName}</TableCell>
-                                <TableCell>{user.username}</TableCell>
-                                <TableCell>{formatDate(user.createdAt)}</TableCell>
-                                <TableCell>
-                                    {user.deleted ? 'Удален' : 'Активен'}
-                                </TableCell>
-                                {canDelete && (
-                                    <TableCell>
-                                        <IconButton 
-                                            onClick={() => handleDelete(user.userId)}
-                                            color="error"
-                                            disabled={user.deleted}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                )}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
+      <Box mt={4}>
+        <Typography color="error" variant="h6" align="center">
+          {error}
+        </Typography>
+      </Box>
     );
+  }
+
+  return (
+    <Box mt={4}>
+      <Typography variant="h4" gutterBottom>
+        Список пользователей
+      </Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Имя пользователя</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.id}</TableCell>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <IconButton
+                    aria-label="delete"
+                    onClick={() => handleDelete(user.id)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 };
 
 export default UserList;
