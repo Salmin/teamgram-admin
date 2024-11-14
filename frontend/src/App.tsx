@@ -18,13 +18,42 @@ const App: React.FC = () => {
         console.log('Keycloak initialized:', {
           authenticated,
           token: !!keycloak.token,
-          refreshToken: !!keycloak.refreshToken
+          refreshToken: !!keycloak.refreshToken,
+          tokenParsed: keycloak.tokenParsed
         });
 
         if (!authenticated) {
           console.log('Пользователь не аутентифицирован, перенаправление на страницу входа...');
-          await keycloak.login();
+          try {
+            await keycloak.login({
+              redirectUri: window.location.origin
+            });
+          } catch (loginError) {
+            console.error('Login error:', loginError);
+            throw loginError;
+          }
+          return;
         }
+
+        // Настраиваем периодическое обновление токена
+        const tokenUpdateInterval = setInterval(() => {
+          if (keycloak.token) {
+            keycloak.updateToken(70)
+              .then(refreshed => {
+                if (refreshed) {
+                  console.log('Token was successfully refreshed');
+                }
+              })
+              .catch(error => {
+                console.error('Failed to refresh the token:', error);
+                keycloak.login();
+              });
+          }
+        }, 60000);
+
+        return () => {
+          clearInterval(tokenUpdateInterval);
+        };
 
       } catch (err) {
         console.error('Keycloak init error:', err);
@@ -38,8 +67,13 @@ const App: React.FC = () => {
           });
           errorMessage += ': ' + err.message;
         } else if (err && typeof err === 'object') {
-          console.error('Error object:', err);
-          errorMessage += ': ' + JSON.stringify(err);
+          try {
+            console.error('Error object:', JSON.stringify(err, null, 2));
+            errorMessage += ': ' + JSON.stringify(err);
+          } catch (e) {
+            console.error('Error stringifying error object:', e);
+            errorMessage += ': ' + String(err);
+          }
         }
         
         setError(errorMessage);
