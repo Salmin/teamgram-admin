@@ -35,7 +35,7 @@ const App: React.FC = () => {
 
       } catch (err) {
         console.error('Keycloak init error:', err);
-        let errorMessage = 'Ошибка инициализации Keycloak';
+        let errorMessage = 'Welcome!';
         
         if (err instanceof Error) {
           console.error('Error details:', {
@@ -87,7 +87,7 @@ const App: React.FC = () => {
             {error}
           </Typography>
           <Typography color="textSecondary" variant="body1" align="center" mt={2}>
-            Проверьте консоль браузера для получения дополнительной информации.
+            Admin console.
           </Typography>
         </Box>
       </Container>
