@@ -18,10 +18,12 @@
 git clone https://github.com/Salmin/teamgram-admin.git
 ```
 
-2. Скопируйте конфигурацию nginx:
+2. Скопируйте конфигурации nginx:
 ```bash
 sudo cp teamgram-admin/nginx/salmin.in.conf /etc/nginx/sites-available/salmin.in
-sudo ln -s /etc/nginx/sites-available/salmin.in.conf /etc/nginx/sites-enabled/
+sudo cp teamgram-admin/nginx/admin.salmin.in.conf /etc/nginx/sites-available/admin.salmin.in
+sudo ln -s /etc/nginx/sites-available/salmin.in /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/admin.salmin.in /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -55,11 +57,11 @@ docker-compose up -d
     - [ ] OAuth 2.0 Device Authorization Grant
     - [ ] OIDC CIBA Grant
   - URL настройки:
-    - Root URL: https://salmin.in/teamgram-admin
-    - Home URL: https://salmin.in/teamgram-admin
-    - Valid redirect URIs: https://salmin.in/teamgram-admin/*
-    - Valid post logout redirect URIs: https://salmin.in/teamgram-admin/*
-    - Web origins: https://salmin.in
+    - Root URL: https://admin.salmin.in
+    - Home URL: https://admin.salmin.in
+    - Valid redirect URIs: https://admin.salmin.in/*
+    - Valid post logout redirect URIs: https://admin.salmin.in/*
+    - Web origins: https://admin.salmin.in
   - После создания клиента:
     - Перейдите во вкладку "Credentials"
     - Скопируйте Client secret
@@ -85,17 +87,36 @@ docker-compose up -d
 ### URL-адреса
 
 - Keycloak: https://salmin.in
-- Админ-панель: https://salmin.in/teamgram-admin
-- Backend API: https://salmin.in/teamgram-admin/api
+- Админ-панель: https://admin.salmin.in
+- Backend API: https://admin.salmin.in/api
 
 ### Структура проекта
 
 ```
 teamgram-admin/
-├── backend/         # Spring Boot backend
-├── frontend/        # React frontend
-├── nginx/          # Nginx конфигурация
-├── .env            # Файл с Client Secret
+├── backend/                 # Spring Boot backend
+│   ├── src/
+│   │   └── main/
+│   │       ├── java/       # Java исходный код
+│   │       └── resources/  # Конфигурационные файлы
+│   ├── Dockerfile         
+│   └── pom.xml            
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── components/    # React компоненты
+│   │   ├── config/        # Конфигурация (включая Keycloak)
+│   │   ├── services/      # API сервисы
+│   │   └── types/         # TypeScript типы
+│   ├── public/
+│   │   └── silent-check-sso.html  # Keycloak SSO поддержка
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   ├── package.json
+│   └── tsconfig.json
+├── nginx/                  # Nginx конфигурации
+│   ├── salmin.in.conf     # Конфигурация для Keycloak
+│   └── admin.salmin.in.conf # Конфигурация для админ-панели
+├── .env                    # Файл с Client Secret
 └── docker-compose.yml
 ```
 
@@ -171,6 +192,7 @@ docker-compose logs -f keycloak
   - Standard flow и Service accounts roles должны быть включены
   - Valid redirect URIs должен соответствовать URL админ-панели
   - Client secret должен быть правильно указан в .env файле
+  - Убедитесь, что silent-check-sso.html доступен
 - Убедитесь, что роли назначены пользователям
 - Проверьте настройки Google Identity Provider
 
